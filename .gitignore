@@ -1,0 +1,26 @@
+# Datasets are downloaded at runtime, not committed
+data/
+*.csv
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Regenerated run outputs at repo root (the curated copies live under results/)
+/q1_training_curves.png
+/q1_translations.txt
+/q2_*.png
+/q3_*.png
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

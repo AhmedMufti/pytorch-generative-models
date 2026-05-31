@@ -1,0 +1,16 @@
+# Core deep learning stack
+torch>=2.0
+torchvision>=0.15
+
+# Data handling and numerics
+numpy>=1.24
+pandas>=2.0
+
+# Plotting and visualization
+matplotlib>=3.7
+
+# Dataset download (Question 1 parallel corpus)
+kagglehub>=0.2
+
+# BLEU score evaluation (Question 1)
+nltk>=3.8

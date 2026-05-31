@@ -1,0 +1,36 @@
+Prompts used for Generative AI Assignment 1
+============================================
+
+Question 1: Machine Translation (English -> Urdu)
+--------------------------------------------------
+1. "In PyTorch, what's the right way to build a custom Dataset for parallel sentence pairs and use it with DataLoader and padding?"
+
+2. "I have an encoder that outputs a hidden state and a decoder that takes it step by step — how do I wire a vanilla RNN seq2seq together in forward()?"
+
+3. "My RNN decoder keeps repeating the same tokens every inference. Could this be a teacher forcing issue or something with how I'm initializing hidden state?"
+
+4. "How do I implement beam search decoding from scratch for a seq2seq model? Just need the loop logic."
+
+5. "I'm using nltk's sentence_bleu — does it expect tokenized lists or raw strings for the hypothesis and reference?"
+
+
+Question 2: Image Denoising (DAE on CIFAR-10)
+----------------------------------------------
+1. "What's the standard way to add Gaussian noise to a normalized image tensor in PyTorch without going out of [0,1] range?"
+
+2. "For a conv autoencoder, should I use MaxPool + ConvTranspose2d or just stride convolutions to get the symmetric encoder-decoder structure?"
+
+3. "How do I compute SSIM between two batches of tensors — is there a simple manual implementation or a standard formula I can use?"
+
+4. "I want to run the same training loop with different noise factors and track both train and val loss per epoch — what's a clean way to structure that?"
+
+
+Question 3: Variational Autoencoder (Fashion-MNIST)
+----------------------------------------------------
+1. "In a VAE, the reparameterization trick is epsilon * std + mu right? How does that let gradients flow through the sampling step?"
+
+2. "What's the correct way to balance reconstruction loss vs KL divergence in the VAE loss? Should I sum or mean across batch?"
+
+3. "Once I have a trained VAE, to generate new images I just sample z from N(0,1) and pass it through the decoder — is that right?"
+
+4. "What does it mean practically if my KL loss goes to zero during training, is that a problem?"

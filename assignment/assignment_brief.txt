@@ -1,0 +1,149 @@
+Generative AI, Assignment # 1
+Department of Computer Science
+National University of Computer and Emerging Sciences,
+Islamabad, Pakistan
+Due Date: February 19, 2026
+Instructions
+• Each student must submit the following three files packaged into a single
+ZIP file and named as ROLLNO NAME.ZIP:
+– A Jupyter Notebook (.ipynb) or Python script (.py) with the com-
+plete implementation.
+– A PDF report written in LATEX using Overleaf, following the Springer’s
+LNCS paper format:
+Springer LNCS Template on Overleaf.
+– A plain text file (.txt) containing all the prompts used for each
+question.
+• Ensure that the code is well-structured with proper comments for each
+function. Include all necessary dependencies to ensure the code runs with-
+out errors.
+• Students must submit also submit a research-style technical report pre-
+pared in LNCS format. The report must include an abstract summa-
+rizing the objective, methodology, dataset, and results; an introduction
+defining the translation problem; a methodology section describing prepro-
+cessing, model design, and training setup; an experimental results section
+presenting quantitative evaluation and comparisons; a discussion section
+including qualitative analysis and limitations; and a conclusion summa-
+rizing findings and future work.
+1
+Question-1: Machine Translation (English →
+Urdu)
+This is a research-based assignment in which students will design, implement,
+train, evaluate, and analyze a Neural Machine Translation (NMT) system us-
+ing a simple vanilla Recurrent Neural Network (RNN) architecture only
+1
+(no LSTM, GRU, or Transformer components). The objective is to build an
+English-to-Urdu translation system using the following parallel corpus dataset
+(approximately 24k sentence pairs):
+Dataset Link: Kaggle Translation Dataset
+Students are expected to conduct experiments, analyze results, and docu-
+ment findings in a structured LNCS-format technical report.
+Tasks
+1. Data Preprocessing Download the dataset, load it into the development
+environment, inspect its structure, and design preprocessing pipelines for
+both English and Urdu sentences. This includes normalization of punctu-
+ation and whitespace, removal of corrupted samples, and proper prepara-
+tion of cleaned datasets.
+2. Train–Validation–Test Split Create reproducible dataset splits (e.g.,
+80/10/10) using a fixed random seed. Report the number of samples in
+each split and confirm that no overlap exists between partitions.
+3. Tokenization and Vocabulary Construction Implement a word-level
+tokenization strategy for both languages and construct vocabularies in-
+cluding special tokens such as padding, beginning-of-sentence, and end-of-
+sentence symbols. Vocabulary size and token handling procedures must
+be documented.
+4. Sequence Encoding, Padding, and Batching Convert tokenized sen-
+tences into integer sequences, apply padding, generate masks for padded
+tokens, and implement batching pipelines that correctly prepare encoder
+inputs, decoder inputs, and shifted target outputs for training.
+5. Vanilla RNN Encoder–Decoder Model Implementation Design
+and implement an encoder–decoder architecture using vanilla RNN layers
+only. The encoder must produce a context representation from the source
+sequence, and the decoder must generate the target sequence. Architec-
+ture details and parameter configurations must be clearly described.
+6. Model Training and Experiment Tracking Implement a complete
+training pipeline including loss computation, optimization, gradient clip-
+ping, checkpoint saving, selection of suitable hyperparameters, and mon-
+itoring of training/validation loss. Training curves and convergence be-
+havior must be presented and discussed.
+7. Hyperparameter Tuning and Experimental Study Conduct sys-
+tematic hyperparameter tuning using Grid Search. Explore parameters
+such as embedding size, hidden dimension, number of RNN layers, learn-
+ing rate, dropout, batch size, etc. Present comparative results and justify
+the final selected configuration in a table showing the hyperparameter, the
+searched range, and the optimal value selected.
+2
+8. Inference, Decoding, and Evaluation Implement inference using greedy
+decoding and at least one advanced decoding method (beam search). Eval-
+uate the trained model on the test set using BLEU score and present
+representative translation examples. Summarize the results in a table.
+9. Error Analysis and Research Discussion Perform qualitative error
+analysis by manually evaluating at least 10 translated sentences, identify-
+ing common failure patterns, and discussing limitations of vanilla RNN-
+based translation models.
+Include representative correct and incorrect
+examples and discuss possible future improvements.
+2
+Question-2: Image Denoising using Denoising
+Autoencoder
+In many real-world imaging applications (medical imaging, surveillance systems,
+satellite imagery, and mobile photography), images are often corrupted by noise
+due to sensor limitations or transmission errors. In this task, students will design
+and implement a Denoising Autoencoder (DAE) capable of reconstructing clean
+images from noisy inputs.
+The dataset to be used for this task is the CIFAR-10 dataset.
+Dataset Link: CIFAR-10 Dataset
+Tasks
+1. Dataset Preparation Load the CIFAR-10 dataset, normalize the images
+appropriately, and prepare training, validation, and testing splits.
+2. Noise Injection Artificially corrupt the training images using two types
+of noise:
+• Gaussian noise
+• Salt-and-pepper noise
+3. Denoising Autoencoder Model Design Design and implement a con-
+volutional denoising autoencoder consisting of encoder and decoder net-
+works. Clearly describe the architecture, bottleneck size, and activation
+functions used.
+4. Model Training Train the denoising autoencoder to reconstruct clean
+images from noisy inputs using an appropriate reconstruction loss func-
+tion.
+5. Evaluation and Visualization Evaluate the model using suitable re-
+construction metrics (e.g., MSE, PSNR, or SSIM). Present visualization
+results showing:
+• Original clean image
+3
+• Noisy image
+• Reconstructed (denoised) image
+6. Experimental Study Analyze how reconstruction performance changes
+with different noise levels and different bottleneck sizes. Summarize results
+in tables and figures and discuss observations.
+3
+Question-3: Generative Modeling using Vari-
+ational Autoencoder (VAE)
+Generative models aim to learn the underlying data distribution so that new
+realistic samples can be generated.
+In this task, students will implement a
+Variational Autoencoder (VAE) to learn latent representations of images
+and generate new synthetic samples.
+The dataset to be used for this task is the Fashion-MNIST dataset.
+Dataset Link: Fashion-MNIST Dataset
+Tasks
+1. Dataset Preparation Load and preprocess the Fashion-MNIST dataset,
+including normalization and preparation of training, validation, and test-
+ing sets.
+2. Variational Autoencoder Architecture Design and implement a VAE
+consisting of:
+• Encoder network producing latent mean (µ) and variance (σ)
+• Reparameterization trick for latent sampling
+• Decoder network reconstructing images from sampled latent vectors
+3. Loss Function Implementation Implement the combined loss consist-
+ing of reconstruction loss and KL-divergence loss.
+4. Model Training Train the VAE model and monitor both reconstruction
+loss and KL-divergence during training.
+5. Image Generation and Visualization Generate new images by sam-
+pling random latent vectors from the learned latent space. Also visualize
+reconstructed images alongside original images.
+6. Experimental Study Analyze the impact of different latent dimensions
+on reconstruction quality and generation capability.
+Present results in
+tables and figures and discuss observations.
+4

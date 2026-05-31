@@ -1,0 +1,349 @@
+% =====================================================================
+% Generative AI Assignment #1 - Technical Report
+% Format: Springer LNCS
+% Instructions: Paste this into Overleaf using the Springer LNCS template
+%   (https://www.overleaf.com/gallery/tagged/springer)
+%   Replace ROLLNO and YOUR NAME below before compiling.
+% =====================================================================
+
+\documentclass[runningheads]{llncs}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{float}
+
+\begin{document}
+
+\title{Sequence Modelling for Translation, Denoising, and Generation:\\
+       A Study of RNN, DAE, and VAE Architectures}
+
+\author{Muhammad Ahmed Mufti\inst{1}}
+\authorrunning{M.A. Mufti}
+
+\institute{
+    Department of Computer Science, NUCES -- FAST Islamabad\\
+    Roll No: i22-1088\\
+    \email{i221088@nu.edu.pk}
+}
+
+\maketitle
+
+% =====================================================================
+\begin{abstract}
+This report presents implementations and evaluations of three generative
+neural network architectures for distinct tasks: (1) a vanilla
+Recurrent Neural Network (RNN) Encoder-Decoder for English-to-Urdu
+machine translation, (2) a Convolutional Denoising Autoencoder (DAE)
+for image restoration on CIFAR-10, and (3) a Variational Autoencoder
+(VAE) for generative modelling on Fashion-MNIST. For translation, the
+model was trained on 2,019 short sentence pairs extracted from a 9,093-
+pair corpus and evaluated using BLEU score and qualitative error
+analysis. The DAE was evaluated under Gaussian and salt-and-pepper
+noise at multiple noise levels using PSNR and SSIM metrics, achieving
+a best PSNR of 23.46\,dB. The VAE was trained across multiple latent
+dimensionalities and assessed via reconstruction fidelity and the
+quality of novel samples drawn from the learned prior. Key findings
+confirm the well-documented limitations of vanilla RNNs for translation
+and demonstrate the effectiveness of convolutional autoencoders and
+VAEs for vision tasks.
+\keywords{Machine Translation \and Denoising Autoencoder \and
+          Variational Autoencoder \and RNN \and BLEU \and PSNR}
+\end{abstract}
+
+% =====================================================================
+\section{Introduction}
+
+Sequence-to-sequence models, autoencoders, and variational generative
+models form foundational pillars of modern deep learning. This
+assignment explores all three paradigms under controlled conditions:
+a low-resource translation setting that stresses the limits of
+unattended RNNs, a corrupted-image reconstruction task that measures
+representational capacity, and a generative modelling problem that
+probes the quality of a learned latent space.
+
+The three objectives are deliberately chosen to highlight both the
+strengths and failure modes of each architecture class, motivating
+more sophisticated designs (attention mechanisms, diffusion models)
+studied in later units.
+
+% =====================================================================
+\section{Question 1: English-to-Urdu Machine Translation}
+
+\subsection{Dataset and Preprocessing}
+
+The English-Urdu parallel corpus~\cite{kaggle_urdu} contains 9,102
+sentence pairs. After removing 9 duplicates and filtering sentences
+longer than 15 words, 2,019 usable pairs remained. These were split
+80/10/10 into train (1,615), validation (201), and test (203) sets
+with no overlap confirmed programmatically. Vocabulary sizes after
+capping at 5,000 tokens per language were 2,438 (English) and 3,011
+(Urdu). Special tokens \texttt{<pad>}, \texttt{<sos>}, \texttt{<eos>},
+and \texttt{<unk>} were added to both vocabularies.
+
+\subsection{Model Architecture}
+
+A vanilla RNN Encoder-Decoder was implemented in PyTorch. The encoder
+maps a source sequence to a fixed-size hidden vector, which initialises
+the decoder. The decoder generates target tokens one step at a time
+using greedy or beam-search decoding at inference.
+
+\begin{itemize}
+    \item \textbf{Encoder:} Embedding(2438, 256) $\rightarrow$ RNN(256, 512, layers=2)
+    \item \textbf{Decoder:} Embedding(3011, 256) $\rightarrow$ RNN(256, 512, layers=2) $\rightarrow$ Linear(512, 3011)
+    \item \textbf{Parameters:} 4,778,691
+    \item \textbf{Weight init:} Orthogonal (RNN weights), zeros (biases)
+\end{itemize}
+
+\subsection{Training Setup}
+
+Hyperparameters were selected via a grid search over four
+configurations (Table~\ref{tab:q1_grid}). The best configuration
+(\texttt{emb\_dim}=256, \texttt{hid\_dim}=512, \texttt{n\_layers}=2,
+\texttt{lr}=0.001, \texttt{dropout}=0.3) was used for full training
+over 30 epochs with Adam optimiser, teacher forcing decaying linearly
+from 1.0 to 0.5, cross-entropy loss (padding tokens ignored), and
+best-checkpoint saving on validation loss.
+
+\begin{table}[H]
+\caption{Hyperparameter grid search results (Q1).}
+\label{tab:q1_grid}
+\centering
+\begin{tabular}{ccccc|c}
+\toprule
+\textbf{emb\_dim} & \textbf{hid\_dim} & \textbf{layers} & \textbf{lr} & \textbf{dropout} & \textbf{Val Loss}\\
+\midrule
+128 & 256 & 1 & 0.003 & 0.1 & 7.8065 \\
+256 & 256 & 1 & 0.001 & 0.1 & 7.1212 \\
+\textbf{256} & \textbf{512} & \textbf{2} & \textbf{0.001} & \textbf{0.3} & \textbf{6.8707} \\
+128 & 512 & 1 & 0.003 & 0.1 & 8.4002 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Results and Evaluation}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{q1_training_curves.png}
+  \caption{Q1 training and validation loss over 30 epochs.}
+  \label{fig:q1_curves}
+\end{figure}
+
+The training loss decreased from 6.23 to 2.92, while validation loss
+increased from 6.32 to 8.03, with best checkpoint at epoch 1
+(val loss 6.32). Greedy BLEU was 0.0162 and beam-search (k=3) BLEU
+was 0.0180 on the test set (Table~\ref{tab:q1_bleu}).
+
+\begin{table}[H]
+\caption{Translation BLEU scores on test set (Q1).}
+\label{tab:q1_bleu}
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{Decoding Strategy} & \textbf{BLEU}\\
+\midrule
+Greedy & 0.0162 \\
+Beam Search ($k=3$) & 0.0180 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Error Analysis}
+
+Qualitative analysis of 30 test predictions revealed word\_repetition
+in 30/30 cases — the model consistently produced high-frequency Urdu
+function words (\textit{اور, نے, میں, سے}) irrespective of input.
+
+\textbf{Root causes:}
+\begin{enumerate}
+    \item \textbf{Vanishing gradients:} Vanilla RNN gradients decay
+    exponentially with sequence length; the decoder hidden state
+    collapses to a near-constant attractor.
+    \item \textbf{Fixed context bottleneck:} A single vector must
+    encode the entire source sentence; without attention, the decoder
+    has no mechanism to align to relevant source positions.
+    \item \textbf{Severe overfitting:} With only 1,615 training pairs,
+    the train/val loss gap widened monotonically (Fig.~\ref{fig:q1_curves}).
+    \item \textbf{Exposure bias:} Teacher-forced training and
+    autoregressive inference operate under different token distributions.
+\end{enumerate}
+
+\textbf{Future improvements:} Bahdanau attention, LSTM/GRU gating,
+subword tokenisation (BPE), Transformer architecture, and a larger
+parallel corpus (100k+ pairs) would each substantially improve
+translation quality.
+
+% =====================================================================
+\section{Question 2: Image Denoising with Convolutional DAE}
+
+\subsection{Dataset}
+
+CIFAR-10~\cite{cifar10} (60,000 RGB images, 32$\times$32 pixels,
+10 classes) was used. Images were normalised to $[0,1]$. Two noise
+types were studied:
+\begin{itemize}
+    \item \textbf{Gaussian noise:} $x_{\text{noisy}} = \text{clip}(x + \mathcal{N}(0, \sigma^2), 0, 1)$
+    \item \textbf{Salt-and-pepper noise:} random pixels set to 0 or 1 with probability $p$
+\end{itemize}
+
+\subsection{Model Architecture}
+
+A symmetric convolutional DAE with configurable bottleneck channels:
+
+\textbf{Encoder:} Conv2d(3,32) $\rightarrow$ BN $\rightarrow$ ReLU $\rightarrow$ MaxPool $\rightarrow$ Conv2d(32,64) $\rightarrow$ BN $\rightarrow$ ReLU $\rightarrow$ MaxPool\\
+\textbf{Decoder:} ConvTranspose2d(64,32) $\rightarrow$ BN $\rightarrow$ ReLU $\rightarrow$ ConvTranspose2d(32,3) $\rightarrow$ Sigmoid
+
+\subsection{Training Setup}
+
+Both noise types were trained separately (15 epochs, Adam, lr=0.001,
+MSE loss). Both training and validation MSE were tracked per epoch.
+An experimental study varied noise factor across {0.1, 0.3, 0.5, 0.7}
+and bottleneck channel count across {16, 32, 64, 128}.
+
+\subsection{Results}
+
+\begin{table}[H]
+\caption{DAE reconstruction quality on test set (Q2).}
+\label{tab:q2_results}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Noise Type} & \textbf{Noise Factor} & \textbf{PSNR (dB)} & \textbf{SSIM}\\
+\midrule
+Gaussian     & 0.3 & 21.74 & 0.944 \\
+Salt-Pepper  & 0.3 & 23.46 & 0.964 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{q2_gaussian_results.png}
+  \caption{Q2 Gaussian denoising: Original / Noisy / Reconstructed.}
+  \label{fig:q2_gauss}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{q2_salt_pepper_results.png}
+  \caption{Q2 Salt-and-pepper denoising: Original / Noisy / Reconstructed.}
+  \label{fig:q2_sp}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{q2_training_curves.png}
+  \caption{Q2 training and validation MSE loss curves for both noise types.}
+  \label{fig:q2_curves}
+\end{figure}
+
+The DAE effectively removed both noise types, recovering recognisable
+object structure from nearly fully corrupted inputs (middle row,
+Fig.~\ref{fig:q2_gauss}). Salt-and-pepper noise achieved higher PSNR
+because its pixel-level corruption is more locally predictable. Output
+blurriness is characteristic of MSE-trained autoencoders, which
+optimise for average pixel error.
+
+% =====================================================================
+\section{Question 3: Variational Autoencoder on Fashion-MNIST}
+
+\subsection{Dataset}
+
+Fashion-MNIST~\cite{fashionmnist} (70,000 grayscale images,
+28$\times$28 pixels, 10 clothing categories). Pixel values normalised
+to $[-1, 1]$.
+
+\subsection{Model Architecture}
+
+\textbf{Encoder:} FC(784$\rightarrow$512) $\rightarrow$ ReLU $\rightarrow$ FC(512$\rightarrow$256) $\rightarrow$ ReLU $\rightarrow$ FC$_\mu$(256$\rightarrow$z) + FC$_\sigma$(256$\rightarrow$z)\\
+\textbf{Reparameterisation:} $z = \mu + \epsilon \cdot e^{0.5\sigma^2}$, $\epsilon \sim \mathcal{N}(0,I)$\\
+\textbf{Decoder:} FC(z$\rightarrow$256) $\rightarrow$ ReLU $\rightarrow$ FC(256$\rightarrow$512) $\rightarrow$ ReLU $\rightarrow$ FC(512$\rightarrow$784) $\rightarrow$ Tanh
+
+\subsection{Loss Function}
+
+\begin{equation}
+\mathcal{L} = \underbrace{\mathbb{E}_{q(z|x)}[\log p(x|z)]}_{\text{Reconstruction (BCE)}} - \underbrace{D_{KL}(q(z|x) \| p(z))}_{\text{Regularisation}}
+\end{equation}
+
+The KL divergence term has the closed-form solution:
+$-\frac{1}{2}\sum(1 + \log\sigma^2 - \mu^2 - \sigma^2)$.
+
+\subsection{Training Setup}
+
+Trained 20 epochs, Adam (lr=0.001), batch size 128. An experimental
+study compared latent dimensions $z \in \{2, 10, 20, 50\}$.
+
+\subsection{Results}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{q3_reconstruction.png}
+  \caption{Q3 VAE: Original (top) vs Reconstructed (bottom) Fashion-MNIST images.}
+  \label{fig:q3_recon}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{q3_generated.png}
+  \caption{Q3 VAE: Novel images generated by sampling $z \sim \mathcal{N}(0,I)$.}
+  \label{fig:q3_gen}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{q3_training_curves.png}
+  \caption{Q3 VAE training curves: reconstruction loss and KL divergence.}
+  \label{fig:q3_curves}
+\end{figure}
+
+Reconstructions preserved the global shape and category of each item
+(shoe, trouser, shirt) while exhibiting characteristic VAE blurriness.
+Novel samples drawn from the prior showed diverse, recognisable
+clothing silhouettes. Higher latent dimensions ($z=50$) produced
+sharper reconstructions at the cost of less smooth interpolations,
+while $z=2$ collapsed category structure.
+
+\subsection{Limitations}
+
+VAE outputs are blurry because the pixel-wise BCE loss penalises
+average error rather than perceptual quality. GANs and diffusion
+models address this by replacing the reconstruction term with an
+adversarial or score-matching objective.
+
+% =====================================================================
+\section{Conclusion}
+
+This work implemented and evaluated three foundational generative
+architectures. The vanilla RNN encoder-decoder confirmed theoretical
+limitations: vanishing gradients, the context bottleneck, and the
+inability to generalise from small corpora produce degenerate
+repetitive output. These failures directly motivate attention
+mechanisms and transformer architectures. The convolutional DAE
+demonstrated robust denoising capability (PSNR up to 23.46\,dB,
+SSIM up to 0.964), validating the encoder-bottleneck-decoder
+design for image restoration. The VAE confirmed the reparameterisation
+trick's effectiveness for learning a regularised latent space suitable
+for generation. Future work would extend the translation system to
+LSTM with Bahdanau attention, replace the DAE's MSE loss with
+perceptual loss, and compare the VAE against a GAN baseline.
+
+% =====================================================================
+\begin{thebibliography}{9}
+
+\bibitem{kaggle_urdu}
+Noman, Muhammad. \textit{English to Urdu Translation Dataset}.
+Kaggle, 2023. \url{https://www.kaggle.com/datasets/muhammadnoman76/translation-dataset}
+
+\bibitem{cifar10}
+Krizhevsky, A.: \textit{Learning Multiple Layers of Features from Tiny Images}.
+Tech Report, University of Toronto (2009)
+
+\bibitem{fashionmnist}
+Xiao, H., Rasul, K., Vollgraf, R.: \textit{Fashion-MNIST: a Novel Image Dataset
+for Benchmarking Machine Learning Algorithms}. arXiv:1708.07747 (2017)
+
+\end{thebibliography}
+
+\end{document}
